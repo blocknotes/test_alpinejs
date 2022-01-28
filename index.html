@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>Client app</title>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300italic,700,700italic">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.4.1/milligram.css">
+
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <script>
+      const SERVER_URL = 'http://localhost:3000/messages';
+
+      function messages() {
+        return {
+          isLoading: false,
+          messages: [],
+          fetchMessages() {
+            this.isLoading = true;
+            fetch(`${SERVER_URL}.json`)
+              .then(res => res.json())
+              .then(data => {
+                this.isLoading = false;
+                this.messages = data;
+              });
+          }
+        }
+      }
+
+      function messageForm() {
+        return {
+          formData: {
+            author: "",
+            content: ""
+          },
+          formButton: 'Submit',
+          formMessage: '',
+          formLoading: false,
+          submitForm() {
+            this.formButton = "Submitting...";
+            this.formMessage = "";
+            this.formLoading = false;
+            fetch(SERVER_URL, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(this.formData),
+            }).then(response => {
+              if(response.ok) {
+                this.formData.author = "";
+                this.formData.content = "";
+                this.formMessage = "Form successfully submitted.";
+                this.$dispatch('msg');
+              }
+              else {
+                this.formMessage = response.statusText;
+                response.json().then(data => { this.formMessage += ` - ${data.message}`; })
+              }
+            })
+            .catch(() => {
+              this.formMessage = "Something went wrong.";
+            })
+            .finally(() => {
+              this.formLoading = false;
+              this.formButton = "Submit";
+            });
+          }
+        }
+      }
+    </script>
+
+    <style>
+      body { background: #eee; padding: 0; }
+      main { background: #fff; border-left: 1px solid #ddd; border-right: 1px solid #ddd; min-height: 100vh; }
+      h1 { padding-top: 25px; }
+      form, fieldset { margin: 0; }
+      li { margin-bottom: 0; }
+      .messages { margin-top: 15px; }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <h1>Messages</h1>
+
+      <div x-data="messages()" x-init="fetchMessages()" @msg.window="fetchMessages()">
+        <div x-show="isLoading">
+          <em>loading...</em>
+        </div>
+
+        <ul class="messages">
+          <template x-for="message in messages" :key="message.url">
+            <li>
+              <span x-text="message.created_at"></span>
+              - <span x-text="message.content"></span>
+              - by <strong x-text="message.author"></strong>
+            </li>
+          </template>
+        </ul>
+      </div>
+
+      <hr>
+
+      <h4>New message</h4>
+
+      <form x-data="messageForm()" @submit.prevent="submitForm">
+        <fieldset>
+          <label for="formData_author">Author</label>
+          <input type="text" x-model="formData.author" id="formData_author">
+
+          <label for="formData_content">Content</label>
+          <input type="text" x-model="formData.content" id="formData_content">
+
+          <button :disabled="formLoading" x-text="formButton"></button>
+        </fieldset>
+        <div>
+          <em x-text="formMessage"></em>
+        </div>
+      </form>
+    </main>
+  </body>
+</html>
