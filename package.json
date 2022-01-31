@@ -7,6 +7,8 @@
     "@web/dev-server": "^0.1.29"
   },
   "scripts": {
-    "start": "web-dev-server --node-resolve --watch"
+    "start": "web-dev-server --node-resolve",
+    "start:debug": "web-dev-server --node-resolve --debug",
+    "start:watch": "web-dev-server --node-resolve --debug --watch"
   }
 }

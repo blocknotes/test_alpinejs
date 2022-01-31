@@ -89,6 +89,7 @@
         <div x-show="isLoading">
           <em>loading...</em>
         </div>
+        <button x-show="!isLoading" @click="fetchMessages()">Refresh messages</button>
 
         <ul class="messages">
           <template x-for="message in messages" :key="message.url">
